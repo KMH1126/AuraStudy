@@ -28,8 +28,63 @@ void AAuraPlayerController::BeginPlay()
 	SetInputMode(InputModeData); 
 }
 
+void AAuraPlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime); 
+	CursorTrace(); 
+}
+
+void AAuraPlayerController::CursorTrace()
+{
+	FHitResult CursorResult;
+	GetHitResultUnderCursor(ECC_Visibility, false, CursorResult); 
+	if (!CursorResult.bBlockingHit)
+	{
+		return; 
+	}
+
+	LastActor = ThisActor; 
+	ThisActor = Cast<IEnemyInterface>(CursorResult.GetActor()); 
+
+	if (LastActor ==nullptr)
+	{
+		if (ThisActor != nullptr)
+		{
+			ThisActor->HightlightActor(); 
+		}
+		else
+		{
+
+		}
+	}
+	else//lastactor ²»Îª¿Õ
+	{
+		if (ThisActor ==nullptr)
+		{
+			LastActor->UnHightlightActor(); 
+		}
+		else
+		{
+			if (LastActor != ThisActor)
+			{
+				LastActor->UnHightlightActor(); 
+				ThisActor->HightlightActor(); 
+			}
+			else
+			{
+
+			}
+		}
+	}
+
+}
+
+
+
 void AAuraPlayerController::SetupInputComponent()
 {
+	Super::SetupInputComponent();
+
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent); 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move); 
 
@@ -52,3 +107,5 @@ void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 	}
 
 }
+
+
