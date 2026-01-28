@@ -6,6 +6,10 @@
 
 UAuraAttributeSet::UAuraAttributeSet()
 {
+	InitHealth(100.f); 
+	InitMaxHealth(120.f);
+	InitMana(50.f);
+	InitMaxMana(50.f);
 }
 
 void UAuraAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const

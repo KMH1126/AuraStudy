@@ -6,6 +6,8 @@
 #include "Character/AuraCharacterBase.h"
 #include "Interaction/EnemyInterface.h"
 #include "Player/APlayerState.h"
+#include "HUD/AuraHUD.h"
+#include "Player/AuraPlayerController.h"
 #include "AuraCharacter.generated.h"
 
 /**

@@ -8,6 +8,11 @@
 
 #include "AuraAttributeSet.generated.h"
 
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
+ 	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
+ 	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+ 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 /**
  * 
  定义了一个属性集
@@ -51,16 +56,22 @@ public:
 	//当服务器上的 Health 发生变化，并同步到客户端时，自动调用 OnRep_Health()------------------
 	//记录当前值/BaseValue/CurrentValue/网络同步
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Vital Attributes")
-	FGameplayAttributeData Health;																
+	FGameplayAttributeData Health;		
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, Health); 
+
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Vital Attributes")
 	FGameplayAttributeData MaxHealth;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, MaxHealth);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Mana, Category = "Mana Attributes")
 	FGameplayAttributeData Mana;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, Mana);
+
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxMana, Category = "Mana Attributes")
 	FGameplayAttributeData MaxMana;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, MaxMana);
 
 
 	//通知 AbilitySystemComponent：这个属性刚刚发生了网络同步变化---------------------

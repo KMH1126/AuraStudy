@@ -16,8 +16,12 @@ void AAuraPlayerController::BeginPlay()
 	check(AuraContext); 
 
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());  
-	check(Subsystem); 
-	Subsystem->AddMappingContext(AuraContext, 0); //填入映射map ； 
+	//check(Subsystem); 不要老是check 容易crush
+	if (Subsystem)
+	{
+		Subsystem->AddMappingContext(AuraContext, 0); //填入映射map ； 
+	}
+	
 
 	bShowMouseCursor = true; 
 	DefaultMouseCursor = EMouseCursor::Default; 
@@ -36,47 +40,73 @@ void AAuraPlayerController::PlayerTick(float DeltaTime)
 
 void AAuraPlayerController::CursorTrace()
 {
-	FHitResult CursorResult;
-	GetHitResultUnderCursor(ECC_Visibility, false, CursorResult); 
-	if (!CursorResult.bBlockingHit)
-	{
-		return; 
-	}
+    FHitResult CursorResult;
+    GetHitResultUnderCursor(ECC_Visibility, false, CursorResult);
+    if (!CursorResult.bBlockingHit)
+    {
+        return;
+    }
 
-	LastActor = ThisActor; 
-	ThisActor = Cast<IEnemyInterface>(CursorResult.GetActor()); 
+    // 1) 先更新 LastActor
+    LastActor = ThisActor;
 
-	if (LastActor ==nullptr)
-	{
-		if (ThisActor != nullptr)
-		{
-			ThisActor->HightlightActor(); 
-		}
-		else
-		{
+    // 2) 正确生成 ThisActor（TScriptInterface）
+    ThisActor.SetObject(nullptr);
+    ThisActor.SetInterface(nullptr);
 
-		}
-	}
-	else//lastactor 不为空
-	{
-		if (ThisActor ==nullptr)
-		{
-			LastActor->UnHightlightActor(); 
-		}
-		else
-		{
-			if (LastActor != ThisActor)
-			{
-				LastActor->UnHightlightActor(); 
-				ThisActor->HightlightActor(); 
-			}
-			else
-			{
+    AActor* HitActor = CursorResult.GetActor();
+    if (HitActor && HitActor->Implements<UEnemyInterface>())
+    {
+        ThisActor.SetObject(HitActor);
+        ThisActor.SetInterface(Cast<IEnemyInterface>(HitActor));
+    }
 
-			}
-		}
-	}
+    // 3) 用 GetObject() 判空；用 GetInterface() 调接口
+    const bool bLastValid = (LastActor.GetObject() != nullptr);
+    const bool bThisValid = (ThisActor.GetObject() != nullptr);
 
+    if (!bLastValid)
+    {
+        if (bThisValid)
+        {
+            if (IEnemyInterface* I = ThisActor.GetInterface())
+            {
+                I->HightlightActor();
+            }
+        }
+        else
+        {
+            // 都空：啥也不做
+        }
+    }
+    else // lastactor 不为空
+    {
+        if (!bThisValid)
+        {
+            if (IEnemyInterface* I = LastActor.GetInterface())
+            {
+                I->UnHightlightActor();
+            }
+        }
+        else
+        {
+            if (LastActor.GetObject() != ThisActor.GetObject())
+            {
+                if (IEnemyInterface* I = LastActor.GetInterface())
+                {
+                    I->UnHightlightActor();
+                }
+                if (IEnemyInterface* I = ThisActor.GetInterface())
+                {
+                    I->HightlightActor();
+                }
+            }
+            else
+            {
+                // 指向同一个对象：啥也不做
+            }
+        }
+    }
 }
 
 
