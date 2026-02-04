@@ -46,7 +46,7 @@ public:
 
 	//°ó¶¨º¯ÊýÄó
 	virtual void BroadcastInitialValues(); 
-
+	virtual void BindCallbacksToDependencies(); 
 
 protected:
 

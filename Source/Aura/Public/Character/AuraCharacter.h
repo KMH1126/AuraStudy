@@ -8,6 +8,7 @@
 #include "Player/APlayerState.h"
 #include "HUD/AuraHUD.h"
 #include "Player/AuraPlayerController.h"
+#include "AbilitySyetem/AuraAbilitySystemComponent.h"
 #include "AuraCharacter.generated.h"
 
 /**
@@ -21,9 +22,16 @@ class AURA_API AAuraCharacter : public AAuraCharacterBase
 public:
 	AAuraCharacter(); 
 	
+	//Enemy接口的重写函数
 	virtual void PossessedBy(AController* NewController) override; 
 	virtual void OnRep_PlayerState() override; 
 
+	//Combat接口的重写函数
+	UFUNCTION(BlueprintCallable)
+	virtual int GetPlayerLevel() override; 
+
+	
+
 private:
-	void InitAbilityActorInfo(); 
+	virtual void InitAbilityActorInfo() override; 
 };

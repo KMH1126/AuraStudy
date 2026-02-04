@@ -24,7 +24,15 @@ public:
 	 void UnHightlightActor() override;
 	 /*敌人接口*/
 
+	 /*Combat接口*/
+	 UFUNCTION(BlueprintCallable)
+	 virtual int GetPlayerLevel() override; 
+
 protected:
 	virtual void BeginPlay() override; 
 	
+	virtual void InitAbilityActorInfo() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS/角色等级")
+	int Level = 1;
 };

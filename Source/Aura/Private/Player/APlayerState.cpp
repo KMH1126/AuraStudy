@@ -26,3 +26,15 @@ UAttributeSet* AAPlayerState::GetAttributeSet() const
 {
 	return AttributeSet; 
 }
+
+void AAPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AAPlayerState, Level);
+}
+
+void AAPlayerState::OnRep_Level(int OldValue)
+{
+	
+}
