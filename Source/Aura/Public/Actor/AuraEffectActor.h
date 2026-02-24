@@ -48,7 +48,10 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASC/Effects")
-	bool bDestroyOnEffectRemoval = false; 
+	bool bDestroyOnEffectApplication = false; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
+	bool bApplyEffectsToEnemies = false;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly ,  Category = "ASC/Effects")
 	TSubclassOf<UGameplayEffect> InstantGameplayEffectClass; 
@@ -76,5 +79,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ASC/Effects")
 	float ActorLevel =1.f; 
+
+
 
 };

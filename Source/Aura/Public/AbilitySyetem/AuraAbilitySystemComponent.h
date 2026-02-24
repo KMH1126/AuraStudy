@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySyetem/Abilities/AuraGameplayAbility.h"
 #include "AuraAbilitySystemComponent.generated.h"
 
 /**
@@ -22,7 +23,14 @@ public:
 
 	FEffectAssetTags EffectAssetTags; 
 
+	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartUpAbilities); 
+
+	void  AbilityInputTagHeld(const FGameplayTag& InputTag); 
+	void  AbilityInputTagReleased(const FGameplayTag& InputTag);
+
+
 protected:
 
-	void EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle ActiveEffectHandle); 
+	UFUNCTION(Client, Reliable)
+	void ClientEffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle ActiveEffectHandle);
 };

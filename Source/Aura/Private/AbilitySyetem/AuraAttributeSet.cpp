@@ -3,12 +3,40 @@
 
 #include "AbilitySyetem/AuraAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "AuraGameplayTags.h"
+#include "Interaction/CombatInterface.h"
+#include "Player/AuraPlayerController.h"
+#include "AbilitySyetem/Library/AuraAbilitySystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 UAuraAttributeSet::UAuraAttributeSet()
 {
-	
+	const FAuraGameplayTags& GameplayTags = FAuraGameplayTags::Get(); 
+
+	TagsToAttribute.Add(GameplayTags.Attributes_Primary_Intelligence, GetIntelligenceAttribute); 
+	TagsToAttribute.Add(GameplayTags.Attributes_Primary_Resilience, GetResilienceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Primary_Strength, GetStrengthAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Primary_Vigor, GetVigorAttribute);
+
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_Armor, GetArmorAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_ArmorPenetration, GetArmorPenetrationAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_BlockChance, GetBlockChanceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_CriticalHitChance, GetCriticalHitChanceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_CriticalHitDamage, GetCriticalHitDamageAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_CriticalHitResistance, GetCriticalHitResistanceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_HealthRegeneration, GetHealthRegenerationAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_ManaRegeneration, GetManaRegenerationAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
+
+	/* Resistance Attributes */
+	TagsToAttribute.Add(GameplayTags.Attributes_Resistance_Arcane, GetArcaneResistanceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Resistance_Fire, GetFireResistanceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Resistance_Lightning, GetLightningResistanceAttribute);
+	TagsToAttribute.Add(GameplayTags.Attributes_Resistance_Physical, GetPhysicalResistanceAttribute);
 
 }
+
 
 void UAuraAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
@@ -24,6 +52,8 @@ void UAuraAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, 
 	}
 
 }
+
+
 
 void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const
 {
@@ -66,12 +96,56 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectMo
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth( FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
+		UE_LOG(LogTemp, Warning, TEXT("Changed Health on %s, Health: %f"), *Props.TargetAvatarActor->GetName(), GetHealth());
 	}
 	if (Data.EvaluatedData.Attribute == GetManaAttribute())
 	{
 		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
 	}
+	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
+	{
+		const float LocalIncomingDamage = GetIncomingDamage();
+		SetIncomingDamage(0.f);
+		if (LocalIncomingDamage > 0.f)
+		{
+			const float NewHealth = GetHealth() - LocalIncomingDamage;
+			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+
+			const bool bFatal = NewHealth <= 0.f;
+
+			if (bFatal)
+			{
+				ICombatInterface* CombatInterface=Cast<ICombatInterface>(Props.TargetAvatarActor);
+				if (CombatInterface)
+				{
+					CombatInterface->Die();
+				}
+			
+			}
+			else
+			{
+				FGameplayTagContainer TagContainer;
+				TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
+				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);    //在这里激活GA_HitReact
+			}
+
+			const bool isBlocked= UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+			const bool IsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+			ShowDamageText(LocalIncomingDamage, Props , isBlocked , IsCriticalHit);
+		}
+	}
 	
+}
+
+void UAuraAttributeSet::ShowDamageText(float Damage , const FEffectProperties& Props , bool bInBlocked, bool bInCritical)
+{
+	if (Props.SourceCharacter != Props.TargetCharacter)
+	{
+		if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.SourceCharacter->Controller))
+		{
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter , bInBlocked, bInCritical);
+		}
+	}
 }
 
 
@@ -154,13 +228,31 @@ void UAuraAttributeSet::OnRep_ManaRegeneration(const FGameplayAttributeData& Old
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UAuraAttributeSet, ManaRegeneration, OldManaRegeneration);
 }
 
+void UAuraAttributeSet::OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UAuraAttributeSet, FireResistance, OldFireResistance);
+}
+
+void UAuraAttributeSet::OnRep_LightningResistance(const FGameplayAttributeData& OldLightningResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UAuraAttributeSet, LightningResistance, OldLightningResistance);
+}
+
+void UAuraAttributeSet::OnRep_ArcaneResistance(const FGameplayAttributeData& OldArcaneResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UAuraAttributeSet, ArcaneResistance, OldArcaneResistance);
+}
+void UAuraAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UAuraAttributeSet, PhysicalResistance, OldPhysicalResistance);
+}
 
 
 
-/*
- 告诉 Unreal 的网络系统：
-这个 AttributeSet 里，哪些变量要从服务器复制到客户端，以及复制时要不要触发回调。
-*/
+
+ //告诉 Unreal 的网络系统：
+//这个 AttributeSet 里，哪些变量要从服务器复制到客户端，以及复制时要不要触发回调。
+
 void UAuraAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps); 
@@ -198,4 +290,10 @@ void UAuraAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, ManaRegeneration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
+
+	/* Resistance Attributes */
+	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, FireResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, LightningResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, ArcaneResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UAuraAttributeSet, PhysicalResistance, COND_None, REPNOTIFY_Always);
 }

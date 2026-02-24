@@ -10,10 +10,22 @@ UOverlayWidgetController* AAuraHUD::GetOverlayController(const FWidgetController
 		OverlayWidgetController = NewObject<UOverlayWidgetController>(this, OverlayWidgetControllerClass); 
 		OverlayWidgetController->SetWidgetControllerParams(WCParams); 
 		OverlayWidgetController->BindCallbacksToDependencies(); 
-		return OverlayWidgetController;
+		
 	}
 
 	return OverlayWidgetController;
+}
+
+UAttributeWidgetController* AAuraHUD::GetAttributeMenuController(const FWidgetControllerParams& WCParams)
+{
+	if (AttributeWidgetController ==nullptr)
+	{
+		AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeMenuWidgetControllerClass);
+		AttributeWidgetController->SetWidgetControllerParams(WCParams);
+		AttributeWidgetController->BindCallbacksToDependencies();
+	
+	}
+	return AttributeWidgetController;
 }
 
 void AAuraHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
@@ -27,9 +39,9 @@ void AAuraHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySyst
 
 	UOverlayWidgetController* WidgetController = GetOverlayController(WidgetControllerParams);
 	OverlayWidget->SetWidgetController(WidgetController);//给OverlayWidgetController填入结构体并返回，OverlayWidget有了对应的controller
-																					//GetOverlayController(WidgetControllerParams)就是OverlayWidgetController
+	WidgetController->BroadcastInitialValues();
+																				//GetOverlayController(WidgetControllerParams)就是OverlayWidgetController
 	
-	WidgetController->BroadcastInitialValues(); 
 
 	OverlayWidget->AddToViewport(); 
 

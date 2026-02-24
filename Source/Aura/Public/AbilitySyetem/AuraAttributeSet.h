@@ -16,6 +16,8 @@
  	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
  	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+
+
 USTRUCT()
 struct FEffectProperties
 {
@@ -80,6 +82,7 @@ class AURA_API UAuraAttributeSet : public UAttributeSet
 public:
 	UAuraAttributeSet(); 
 
+	TMap<FGameplayTag, TBaseStaticDelegateInstance<FGameplayAttribute(), FDefaultDelegateUserPolicy>::FFuncPtr> TagsToAttribute;
 
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override; //告诉 Unreal 的网络系统：AttributeSet 里，哪些变量要
@@ -88,6 +91,8 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override; 
 
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override; 
+
+	void ShowDamageText(float Damage, const FEffectProperties& Props  , bool bInBlocked , bool bInCritical);
 
 	/*
 	* Primary Attribute
@@ -141,6 +146,13 @@ public:
 	FGameplayAttributeData ManaRegeneration;
 	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, ManaRegeneration);
 	
+	/*
+	 * Meta Attributes
+	 */
+
+	UPROPERTY(BlueprintReadOnly, Category = "Meta Attributes")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, IncomingDamage);
 																										
 	//当服务器上的 Health 发生变化，并同步到客户端时，自动调用 OnRep_Health()---------------------------------------------------
 	//记录当前值/BaseValue/CurrentValue/网络同步
@@ -161,6 +173,26 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxMana, Category = "Mana Attributes")
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, MaxMana);
+
+	/*
+	 * Resistance Attributes
+	 */
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_FireResistance, Category = "Resistance Attributes")
+	FGameplayAttributeData FireResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, FireResistance);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LightningResistance, Category = "Resistance Attributes")
+	FGameplayAttributeData LightningResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, LightningResistance);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ArcaneResistance, Category = "Resistance Attributes")
+	FGameplayAttributeData ArcaneResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, ArcaneResistance);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalResistance, Category = "Resistance Attributes")
+	FGameplayAttributeData PhysicalResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, PhysicalResistance);
 
 
 	//通知 AbilitySystemComponent：这个属性刚刚发生了网络同步变化---------------------------------------------------------------
@@ -214,6 +246,19 @@ public:
 	void OnRep_ManaRegeneration(const FGameplayAttributeData& OldManaRegeneration) const;
 
 
+	//---------------------------------------------------------------------------------------------------------------------------------------------------
+
+	UFUNCTION()
+	void OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance) const;
+
+	UFUNCTION()
+	void OnRep_LightningResistance(const FGameplayAttributeData& OldLightningResistance) const;
+
+	UFUNCTION()
+	void OnRep_ArcaneResistance(const FGameplayAttributeData& OldArcaneResistance) const;
+
+	UFUNCTION()
+	void OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const;
 
 private:
 	void SetEffectProperties(const  FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const; 

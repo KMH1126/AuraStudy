@@ -7,6 +7,7 @@
 #include "UI/Widget/AuraUserWidget.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
 #include "UI/WidgetController/AuraUserWidgetController.h"
+#include "UI/WidgetController/AttributeWidgetController.h"
 #include "AuraHUD.generated.h"
 
 /**
@@ -21,7 +22,11 @@ public:
 	UPROPERTY()
 	TObjectPtr<UAuraUserWidget>  OverlayWidget;
 
+	TObjectPtr<UAuraUserWidget>  AttributeMenuWidget;
+
 	UOverlayWidgetController* GetOverlayController(const FWidgetControllerParams& WCParams); 
+
+	UAttributeWidgetController* GetAttributeMenuController(const FWidgetControllerParams& WCParams);
 
 	void InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS); 
 
@@ -29,10 +34,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AuraOverlay")
 	TSubclassOf<UAuraUserWidget> OverlayWidgetClass; //先创建类 实例化之后用指针OverlayWidget去访问修改变量做一些操作
 
+	UPROPERTY(EditAnywhere, Category = "AuraAttributeMenu")
+	TSubclassOf<UAuraUserWidget> AttributeMenuWidgetClass; 
+
 	UPROPERTY(EditAnywhere, Category = "AuraOverlay")
 	TSubclassOf<UOverlayWidgetController> OverlayWidgetControllerClass;
 
+	UPROPERTY(EditAnywhere, Category = "AuraAttributeMenu")
+	TSubclassOf<UAttributeWidgetController> AttributeMenuWidgetControllerClass;
+
 	UPROPERTY()
 	TObjectPtr<UOverlayWidgetController>  OverlayWidgetController;
+
+	UPROPERTY()
+	TObjectPtr<UAttributeWidgetController>  AttributeWidgetController;
 
 };

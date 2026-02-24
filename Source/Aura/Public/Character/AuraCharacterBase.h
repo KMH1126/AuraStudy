@@ -9,9 +9,11 @@
 #include "AttributeSet.h"
 #include "GameplayEffect.h"
 #include "Interaction/CombatInterface.h"
+#include "Components/CapsuleComponent.h"
 #include "AuraCharacterBase.generated.h"
 
 class UGameplayEffect; 
+
 
 UCLASS(Abstract)//抽象类
 class AURA_API AAuraCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -24,10 +26,30 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual void InitialDefaultAttributes() const;
 	UAttributeSet* GetAttributeSet() const; 
 
-	UPROPERTY(EditAnywhere, Category = "Combat"); 
+	virtual void InitAbilityActorInfo();
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
+
+	virtual void Die() override; 
+
+	UFUNCTION(NetMulticast , Reliable)
+	virtual void MulticastHandleDeath();
+
+	void Dissolve(); 
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartTimeDissolve(UMaterialInstanceDynamic* DissovleMat);
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartWeaponTimeDissolve(UMaterialInstanceDynamic* DissovleMat);
+
+	UPROPERTY(EditAnywhere, Category = "GAS/Combat"); 
 	TObjectPtr<USkeletalMeshComponent> Weapon; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS/Combat")
+	FName WeaponTipName; 
+
+	virtual FVector GetCombatSocketLocation() override;
 
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent; 
@@ -35,8 +57,16 @@ public:
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet; 
 
-	virtual void InitAbilityActorInfo();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	UAnimMontage* HitMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<UMaterialInstance> DissovleMaterial; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<UMaterialInstance> WeaponDissovleMaterial;
+
+	//初始化属性----------------------------------------------------------------------------------------------------------------------------
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GAS/Attributes")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
 
@@ -47,7 +77,15 @@ public:
 	TSubclassOf<UGameplayEffect> VitalAttributes;
 
 	void ApplayEffectToSelf(TSubclassOf<UGameplayEffect> DefaultAttributes , float Level) const;
-	void InitialDefaultAttributes(); 
+	
 
+
+	//技能部分------------------------------------------------------------------------------------------------------------------------------
+
+	void AddCharacterAbilities();
+
+private:
+	UPROPERTY(EditAnywhere, Category = "GAS/Ability")
+	TArray<TSubclassOf<UGameplayAbility>> StartUpAbilities; 
 	
 };
